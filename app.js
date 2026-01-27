@@ -1,4 +1,5 @@
-import express, { Router } from 'express';
+import { Router } from './routes/api/index.js';
+import express from 'express';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 
 const app = express();
