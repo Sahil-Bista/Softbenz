@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, param, query } from 'express-validator';
 
 export const createBlogValidator = [
   body('title')
@@ -17,7 +17,7 @@ export const createBlogValidator = [
     ),
 ];
 
-export const validateSlug = body('slug')
+export const validateSlug = param('slug')
   .trim()
   .isLength({ min: 1, max: 200 })
   .withMessage('Slug is too long')
@@ -27,3 +27,15 @@ export const validateSlug = body('slug')
   );
 
 export const editBlogValidation = [validateSlug, ...createBlogValidator];
+
+export const validateBlogsPagination = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage('Limit must be between 1 and 50'),
+];

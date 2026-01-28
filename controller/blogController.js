@@ -16,29 +16,22 @@ export const createBlog = async (req, res) => {
     error.statusCode = 409;
     throw error;
   }
-
   let baseSlug = slugify(title, {
     lower: true,
     strict: true,
     trim: true,
   });
-
   let uniqueSlug = baseSlug;
   let counter = 1;
-
   while (await BlogModel.exists({ slug: uniqueSlug })) {
     uniqueSlug = `${baseSlug}-${counter++}`;
   }
-
-  console.log(uniqueSlug);
-
   const newBlog = await BlogModel.create({
     authorId: userId,
     title: title,
     content: content,
     slug: uniqueSlug,
   });
-
   return res.status(201).json(newBlog);
 };
 
@@ -46,15 +39,18 @@ export const postBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
   const post = await BlogModel.findOne({ slug });
-  if (userId !== post.authorId) {
-    const error = new Error('User unauthorizedß');
-    error.statusCode = 401;
-    throw error;
-  }
   if (!post) {
     const error = new Error('Blog not found');
     error.statusCode = 404;
     throw error;
+  }
+  if (userId !== post.authorId.toString()) {
+    const error = new Error('User unauthorizedß');
+    error.statusCode = 401;
+    throw error;
+  }
+  if (post.status === 'Published') {
+    return res.status(200).json({ msg: 'Post alread published' });
   }
   post.status = 'Published';
   await post.save();
@@ -65,14 +61,14 @@ export const archiveBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
   const post = await BlogModel.findOne({ slug });
-  if (userId !== post.authorId) {
-    const error = new Error('User unauthorizedß');
-    error.statusCode = 401;
-    throw error;
-  }
   if (!post) {
     const error = new Error('Blog not found');
     error.statusCode = 404;
+    throw error;
+  }
+  if (userId !== post.authorId.toString()) {
+    const error = new Error('User unauthorizedß');
+    error.statusCode = 401;
     throw error;
   }
   post.status = 'Unpublished';
@@ -80,15 +76,10 @@ export const archiveBlog = async (req, res) => {
   return res.status(200).json({ msg: 'post published', data: post });
 };
 
+//a specific blog can be receeived by both users and the author
 export const getBlog = async (req, res) => {
   const { slug } = req.params;
-  const userId = req.user;
   const post = await BlogModel.findOne({ slug });
-  if (userId !== post.authorId) {
-    const error = new Error('The post doesnot belong to this author');
-    error.statusCode = 401;
-    throw error;
-  }
   if (!post) {
     const error = new Error('Blog not found');
     error.statusCode = 404;
@@ -112,13 +103,13 @@ export const getAllBlogs = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const totalBlogs = await BlogModel.countDocuments({ status: 'published' });
+  const totalBlogs = await BlogModel.countDocuments({ status: 'Published' });
   if (totalBlogs === 0) {
     const error = new Error('No blogs have been published yet');
     error.statusCode = 404;
     throw error;
   }
-  const publishedPosts = await BlogModel.find({ status: 'published' })
+  const publishedPosts = await BlogModel.find({ status: 'Published' })
     .skip(skip)
     .limit(limit);
   const totalPages = Math.ceil(totalBlogs / limit);
@@ -137,13 +128,14 @@ export const getAllBlogs = async (req, res) => {
 export const editBlog = async (req, res) => {
   const { slug } = req.params;
   const { title, content } = req.body;
+  const userId = req.user;
   const blog = await BlogModel.findOne({ slug });
   if (!blog) {
     const error = new Error('Blog not found');
     error.statusCode = 404;
     throw error;
   }
-  if (userId !== post.authorId) {
+  if (userId !== blog.authorId.toString()) {
     const error = new Error('The post doesnot belong to this author');
     error.statusCode = 401;
     throw error;
@@ -158,16 +150,17 @@ export const deleteBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
   const post = await BlogModel.findOne({ slug });
-  if (userId !== post.authorId) {
-    const error = new Error('The post doesnot belong to this author');
-    error.statusCode = 401;
-    throw error;
-  }
   if (!post) {
     const error = new Error('Blog not found');
     error.statusCode = 404;
     throw error;
   }
+  if (userId !== post.authorId.toString()) {
+    const error = new Error('The post doesnot belong to this author');
+    error.statusCode = 401;
+    throw error;
+  }
+
   const deletedPost = await BlogModel.deleteOne({ slug });
   return res.status(200).json({ msg: 'blog deleted', data: deletedPost });
 };

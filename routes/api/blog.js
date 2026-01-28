@@ -16,6 +16,7 @@ import { asyncWrapper } from '../../utils/asyncWrapper.js';
 import {
   createBlogValidator,
   editBlogValidation,
+  validateBlogsPagination,
   validateSlug,
 } from '../../validation/blogValidation.js';
 
@@ -24,7 +25,7 @@ export const BlogRouter = express.Router();
 BlogRouter.post(
   '/create',
   verifyJWT,
-  verifyRoles(['Author']),
+  verifyRoles('Author'),
   createBlogValidator,
   validationMiddleware,
   asyncWrapper(createBlog),
@@ -33,7 +34,7 @@ BlogRouter.post(
 BlogRouter.post(
   '/publish/:slug',
   verifyJWT,
-  verifyRoles(['Author']),
+  verifyRoles('Author'),
   validateSlug,
   validationMiddleware,
   asyncWrapper(postBlog),
@@ -42,40 +43,43 @@ BlogRouter.post(
 BlogRouter.post(
   '/archive/:slug',
   verifyJWT,
-  verifyRoles(['Author']),
+  verifyRoles('Author'),
   validateSlug,
   validationMiddleware,
   asyncWrapper(archiveBlog),
 );
 
 BlogRouter.get(
+  '/myBlogs',
+  verifyJWT,
+  verifyRoles('Author'),
+  asyncWrapper(getAllAuthorBlogs),
+);
+
+//a specific blog can be receeived by both users and the author
+BlogRouter.get(
   '/:slug',
   verifyJWT,
-  verifyRoles(['Author']),
+  verifyRoles('Author', 'User'),
   validateSlug,
   validationMiddleware,
   asyncWrapper(getBlog),
-);
-
-BlogRouter.get(
-  '/',
-  verifyJWT,
-  verifyRoles(['Author']),
-  asyncWrapper(getAllAuthorBlogs),
 );
 
 //Public users need to be logged in to view blogs is the the functional requirement created as was not clear in the question
 BlogRouter.get(
   '/',
   verifyJWT,
-  verifyRoles(['Author', 'User']),
+  verifyRoles('Author', 'User'),
+  validateBlogsPagination,
+  validationMiddleware,
   asyncWrapper(getAllBlogs),
 );
 
 BlogRouter.patch(
-  '/:slug',
+  '/edit/:slug',
   verifyJWT,
-  verifyRoles(['Author']),
+  verifyRoles('Author'),
   editBlogValidation,
   validationMiddleware,
   asyncWrapper(editBlog),
@@ -84,7 +88,7 @@ BlogRouter.patch(
 BlogRouter.delete(
   '/:slug',
   verifyJWT,
-  verifyRoles(['Author']),
+  verifyRoles('Author'),
   validateSlug,
   validationMiddleware,
   asyncWrapper(deleteBlog),
