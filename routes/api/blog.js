@@ -7,6 +7,7 @@ import {
   deleteBlog,
   editBlog,
   getAllAuthorBlogs,
+  getAllBlogs,
   getBlog,
   postBlog,
 } from '../../controller/blogController.js';
@@ -61,6 +62,14 @@ BlogRouter.get(
   verifyJWT,
   verifyRoles(['Author']),
   asyncWrapper(getAllAuthorBlogs),
+);
+
+//Public users need to be logged in to view blogs is the the functional requirement created as was not clear in the question
+BlogRouter.get(
+  '/',
+  verifyJWT,
+  verifyRoles(['Author', 'User']),
+  asyncWrapper(getAllBlogs),
 );
 
 BlogRouter.patch(

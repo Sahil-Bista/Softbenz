@@ -108,6 +108,32 @@ export const getAllAuthorBlogs = async (req, res) => {
   return res.status(200).json({ msg: 'blog found', data: post });
 };
 
+export const getAllBlogs = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const totalBlogs = await BlogModel.countDocuments({ status: 'published' });
+  if (totalBlogs === 0) {
+    const error = new Error('No blogs have been published yet');
+    error.statusCode = 404;
+    throw error;
+  }
+  const publishedPosts = await BlogModel.find({ status: 'published' })
+    .skip(skip)
+    .limit(limit);
+  const totalPages = Math.ceil(totalBlogs / limit);
+  return res.status(200).json({
+    msg: 'blogs retrieved',
+    meta: {
+      totalBlogs,
+      totalPages,
+      currentPage: page,
+      pageSize: publishedPosts.length,
+    },
+    data: publishedPosts,
+  });
+};
+
 export const editBlog = async (req, res) => {
   const { slug } = req.params;
   const { title, content } = req.body;
