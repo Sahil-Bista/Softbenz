@@ -2,7 +2,9 @@ import express from 'express';
 import { verifyJWT } from '../../middlewares/verifyJWT.js';
 import { verifyRoles } from '../../middlewares/verifyRoles.js';
 import {
+  archiveBlog,
   createBlog,
+  deleteBlog,
   getAllAuthorBlogs,
   getBlog,
   postBlog,
@@ -34,6 +36,15 @@ BlogRouter.post(
   asyncWrapper(postBlog),
 );
 
+BlogRouter.post(
+  '/archive/:slug',
+  verifyJWT,
+  verifyRoles(['Author']),
+  validateSlug,
+  validationMiddleware,
+  asyncWrapper(archiveBlog),
+);
+
 BlogRouter.get(
   '/:slug',
   verifyJWT,
@@ -48,4 +59,13 @@ BlogRouter.get(
   verifyJWT,
   verifyRoles(['Author']),
   asyncWrapper(getAllAuthorBlogs),
+);
+
+BlogRouter.delete(
+  '/:slug',
+  verifyJWT,
+  verifyRoles(['Author']),
+  validateSlug,
+  validationMiddleware,
+  asyncWrapper(deleteBlog),
 );

@@ -46,7 +46,7 @@ export const postBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
   const post = await BlogModel.findOne({ slug });
-  if (userId !== post._id) {
+  if (userId !== post.authorId) {
     const error = new Error('User unauthorizedß');
     error.statusCode = 401;
     throw error;
@@ -61,11 +61,30 @@ export const postBlog = async (req, res) => {
   return res.status(200).json({ msg: 'post published', data: post });
 };
 
+export const archiveBlog = async (req, res) => {
+  const { slug } = req.params;
+  const userId = req.user;
+  const post = await BlogModel.findOne({ slug });
+  if (userId !== post.authorId) {
+    const error = new Error('User unauthorizedß');
+    error.statusCode = 401;
+    throw error;
+  }
+  if (!post) {
+    const error = new Error('Blog not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  post.status = 'Unpublished';
+  await post.save();
+  return res.status(200).json({ msg: 'post published', data: post });
+};
+
 export const getBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
   const post = await BlogModel.findOne({ slug });
-  if (userId !== post._id) {
+  if (userId !== post.authorId) {
     const error = new Error('The post doesnot belong to this author');
     error.statusCode = 401;
     throw error;
@@ -87,4 +106,22 @@ export const getAllAuthorBlogs = async (req, res) => {
     throw error;
   }
   return res.status(200).json({ msg: 'blog found', data: post });
+};
+
+export const deleteBlog = async (req, res) => {
+  const { slug } = req.params;
+  const userId = req.user;
+  const post = await BlogModel.findOne({ slug });
+  if (userId !== post.authorId) {
+    const error = new Error('The post doesnot belong to this author');
+    error.statusCode = 401;
+    throw error;
+  }
+  if (!post) {
+    const error = new Error('Blog not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  const deletedPost = await BlogModel.deleteOne({ slug });
+  return res.status(200).json({ msg: 'blog deleted', data: deletedPost });
 };
