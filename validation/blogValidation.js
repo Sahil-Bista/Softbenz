@@ -25,3 +25,5 @@ export const validateSlug = body('slug')
   .withMessage(
     'Slug must contain only lowercase letters, numbers, and single hyphens',
   );
+
+export const editBlogValidation = [validateSlug, ...createBlogValidator];

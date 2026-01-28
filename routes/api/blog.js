@@ -5,6 +5,7 @@ import {
   archiveBlog,
   createBlog,
   deleteBlog,
+  editBlog,
   getAllAuthorBlogs,
   getBlog,
   postBlog,
@@ -13,6 +14,7 @@ import { validationMiddleware } from '../../middlewares/validationMiddleware.js'
 import { asyncWrapper } from '../../utils/asyncWrapper.js';
 import {
   createBlogValidator,
+  editBlogValidation,
   validateSlug,
 } from '../../validation/blogValidation.js';
 
@@ -59,6 +61,15 @@ BlogRouter.get(
   verifyJWT,
   verifyRoles(['Author']),
   asyncWrapper(getAllAuthorBlogs),
+);
+
+BlogRouter.patch(
+  '/:slug',
+  verifyJWT,
+  verifyRoles(['Author']),
+  editBlogValidation,
+  validationMiddleware,
+  asyncWrapper(editBlog),
 );
 
 BlogRouter.delete(
