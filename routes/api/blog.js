@@ -1,7 +1,12 @@
 import express from 'express';
 import { verifyJWT } from '../../middlewares/verifyJWT.js';
 import { verifyRoles } from '../../middlewares/verifyRoles.js';
-import { createBlog } from '../../controller/blogController.js';
+import {
+  createBlog,
+  getAllAuthorBlogs,
+  getBlog,
+  postBlog,
+} from '../../controller/blogController.js';
 import { validationMiddleware } from '../../middlewares/validationMiddleware.js';
 import { asyncWrapper } from '../../utils/asyncWrapper.js';
 import {
@@ -21,10 +26,26 @@ BlogRouter.post(
 );
 
 BlogRouter.post(
-  '/publish',
+  '/publish/:slug',
   verifyJWT,
   verifyRoles(['Author']),
   validateSlug,
   validationMiddleware,
-  asyncWrapper(createBlog),
+  asyncWrapper(postBlog),
+);
+
+BlogRouter.get(
+  '/:slug',
+  verifyJWT,
+  verifyRoles(['Author']),
+  validateSlug,
+  validationMiddleware,
+  asyncWrapper(getBlog),
+);
+
+BlogRouter.get(
+  '/',
+  verifyJWT,
+  verifyRoles(['Author']),
+  asyncWrapper(getAllAuthorBlogs),
 );

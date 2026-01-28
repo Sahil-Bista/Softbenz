@@ -60,3 +60,31 @@ export const postBlog = async (req, res) => {
   await post.save();
   return res.status(200).json({ msg: 'post published', data: post });
 };
+
+export const getBlog = async (req, res) => {
+  const { slug } = req.params;
+  const userId = req.user;
+  const post = await BlogModel.findOne({ slug });
+  if (userId !== post._id) {
+    const error = new Error('The post doesnot belong to this author');
+    error.statusCode = 401;
+    throw error;
+  }
+  if (!post) {
+    const error = new Error('Blog not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  return res.status(200).json({ msg: 'blog found', data: post });
+};
+
+export const getAllAuthorBlogs = async (req, res) => {
+  const userId = req.user;
+  const post = await BlogModel.find({ authorId: userId });
+  if (post.length <= 0) {
+    const error = new Error('No any blogs written by the author yet');
+    error.statusCode = 404;
+    throw error;
+  }
+  return res.status(200).json({ msg: 'blog found', data: post });
+};
