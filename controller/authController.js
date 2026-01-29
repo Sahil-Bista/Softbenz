@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../model/User.js';
 
+//allows users to login to the system along with creation of a jwt token for authentication
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const user = await UserModel.findOne({ email });

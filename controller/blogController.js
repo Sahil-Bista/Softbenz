@@ -2,6 +2,7 @@ import slugify from 'slugify';
 import { BlogModel } from '../model/Blog.js';
 import PDFDocument from 'pdfkit';
 
+//controller method to let logged in authors create blogs
 export const createBlog = async (req, res) => {
   const userId = req.user;
   const { title, content, allowDownload } = req.body;
@@ -37,6 +38,7 @@ export const createBlog = async (req, res) => {
   return res.status(201).json(newBlog);
 };
 
+//controller method to allow authors to publish the blog
 export const postBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
@@ -59,6 +61,7 @@ export const postBlog = async (req, res) => {
   return res.status(200).json({ msg: 'post published', data: post });
 };
 
+//allows authors to archive the blogs, i.e set it to unpublished
 export const archiveBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
@@ -78,6 +81,7 @@ export const archiveBlog = async (req, res) => {
   return res.status(200).json({ msg: 'post published', data: post });
 };
 
+//method that allows users and authors to retrieve or view a specific blog
 //a specific blog can be receeived by both users and the author
 export const getBlog = async (req, res) => {
   const { slug } = req.params;
@@ -90,6 +94,7 @@ export const getBlog = async (req, res) => {
   return res.status(200).json({ msg: 'blog found', data: post });
 };
 
+//method that allows an author to get a list of all the blogs published by them
 export const getAllAuthorBlogs = async (req, res) => {
   const userId = req.user;
   const post = await BlogModel.find({ authorId: userId });
@@ -101,6 +106,7 @@ export const getAllAuthorBlogs = async (req, res) => {
   return res.status(200).json({ msg: 'blog found', data: post });
 };
 
+//method that allows users and authors to get a list of all the blogs published in the site implemented along with pagination
 export const getAllBlogs = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -127,6 +133,7 @@ export const getAllBlogs = async (req, res) => {
   });
 };
 
+//allows authors that have created the blog to edit them
 export const editBlog = async (req, res) => {
   const { slug } = req.params;
   const { title, content } = req.body;
@@ -148,6 +155,7 @@ export const editBlog = async (req, res) => {
   return res.status(200).json({ msg: 'blog updated', data: blog });
 };
 
+//allows authors that have created a blog to delete those
 export const deleteBlog = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
@@ -167,6 +175,7 @@ export const deleteBlog = async (req, res) => {
   return res.status(200).json({ msg: 'blog deleted', data: deletedPost });
 };
 
+//allows authors to toggle downloadability for blogs written by them
 export const toggleDownloadability = async (req, res) => {
   const { slug } = req.params;
   const userId = req.user;
@@ -188,6 +197,7 @@ export const toggleDownloadability = async (req, res) => {
     .json({ msg: 'post downloadability changed', data: post });
 };
 
+//alllows users to download blogs as pdf to be able to view them or use them offline
 export const downloadBlogPDF = async (req, res) => {
   const { slug } = req.params;
   const blog = await BlogModel.findOne({ slug });

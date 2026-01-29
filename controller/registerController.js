@@ -1,6 +1,7 @@
 import { UserModel } from '../model/User.js';
 import bcrypt from 'bcrypt';
 
+//registers the users into the system
 export const registerUser = async (req, res) => {
   const { email, password, firstName, lastName, role } = req.body;
   const existingUser = await UserModel.findOne({ email });
