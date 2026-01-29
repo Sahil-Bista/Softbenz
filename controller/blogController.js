@@ -111,15 +111,23 @@ export const getAllBlogs = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-  const totalBlogs = await BlogModel.countDocuments({ status: 'Published' });
+
+  const searchTerm = req.query.search;
+  let filter = { status: 'Published' };
+
+  if (searchTerm) {
+    const regex = new RegExp(searchTerm, 'i');
+    filter.$or = [{ title: regex }, { content: regex }];
+  }
+
+  const totalBlogs = await BlogModel.countDocuments(filter);
   if (totalBlogs === 0) {
     const error = new Error('No blogs have been published yet');
     error.statusCode = 404;
     throw error;
   }
-  const publishedPosts = await BlogModel.find({ status: 'Published' })
-    .skip(skip)
-    .limit(limit);
+  const publishedPosts = await BlogModel.find(filter).skip(skip).limit(limit);
+
   const totalPages = Math.ceil(totalBlogs / limit);
   return res.status(200).json({
     msg: 'blogs retrieved',
