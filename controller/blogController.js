@@ -1,9 +1,10 @@
 import slugify from 'slugify';
 import { BlogModel } from '../model/Blog.js';
+import PDFDocument from 'pdfkit';
 
 export const createBlog = async (req, res) => {
   const userId = req.user;
-  const { title, content } = req.body;
+  const { title, content, allowDownload } = req.body;
   const authorContent = await BlogModel.findOne({
     authorId: userId,
     title: title,
@@ -31,6 +32,7 @@ export const createBlog = async (req, res) => {
     title: title,
     content: content,
     slug: uniqueSlug,
+    allowDownload: allowDownload,
   });
   return res.status(201).json(newBlog);
 };
@@ -46,7 +48,7 @@ export const postBlog = async (req, res) => {
   }
   if (userId !== post.authorId.toString()) {
     const error = new Error('User unauthorizedß');
-    error.statusCode = 401;
+    error.statusCode = 403;
     throw error;
   }
   if (post.status === 'Published') {
@@ -68,7 +70,7 @@ export const archiveBlog = async (req, res) => {
   }
   if (userId !== post.authorId.toString()) {
     const error = new Error('User unauthorizedß');
-    error.statusCode = 401;
+    error.statusCode = 403;
     throw error;
   }
   post.status = 'Unpublished';
@@ -137,7 +139,7 @@ export const editBlog = async (req, res) => {
   }
   if (userId !== blog.authorId.toString()) {
     const error = new Error('The post doesnot belong to this author');
-    error.statusCode = 401;
+    error.statusCode = 403;
     throw error;
   }
   blog.title = title;
@@ -157,10 +159,81 @@ export const deleteBlog = async (req, res) => {
   }
   if (userId !== post.authorId.toString()) {
     const error = new Error('The post doesnot belong to this author');
-    error.statusCode = 401;
+    error.statusCode = 403;
     throw error;
   }
 
   const deletedPost = await BlogModel.deleteOne({ slug });
   return res.status(200).json({ msg: 'blog deleted', data: deletedPost });
+};
+
+export const toggleDownloadability = async (req, res) => {
+  const { slug } = req.params;
+  const userId = req.user;
+  const post = await BlogModel.findOne({ slug });
+  if (!post) {
+    const error = new Error('Blog not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (userId !== post.authorId.toString()) {
+    const error = new Error('User unauthorizedß');
+    error.statusCode = 403;
+    throw error;
+  }
+  post.allowDownload = !post.allowDownload;
+  await post.save();
+  return res
+    .status(200)
+    .json({ msg: 'post downloadability changed', data: post });
+};
+
+export const downloadBlogPDF = async (req, res) => {
+  const { slug } = req.params;
+  const blog = await BlogModel.findOne({ slug });
+  if (!blog) {
+    const error = new Error('Blog not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const isPublished = blog.status;
+  if (isPublished !== 'Published') {
+    const error = new Error('Blog with this slug has not been published');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const isDownloadable = blog.allowDownload;
+  if (!isDownloadable) {
+    const error = new Error(
+      'The author has not allowed downloadability for the file',
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${blog.slug}.pdf"`,
+  );
+
+  const doc = new PDFDocument({ margin: 50 });
+  doc.pipe(res);
+
+  doc.fontSize(22).text(blog.title, { align: 'left' }).moveDown(1);
+
+  doc
+    .fontSize(12)
+    .text(`Status: ${blog.status}`)
+    .text(`Created: ${blog.createdAt.toDateString()}`)
+    .moveDown(1);
+
+  doc.fontSize(14).text(blog.content, {
+    align: 'left',
+    lineGap: 6,
+  });
+
+  doc.end();
 };

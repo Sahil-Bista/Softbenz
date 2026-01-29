@@ -15,6 +15,10 @@ export const createBlogValidator = [
     .withMessage(
       'A title of a minimum length of 10 characters and a max of 500 is required',
     ),
+  body('allowDownload')
+    .notEmpty()
+    .isBoolean()
+    .withMessage('allowDownload must be a boolean value (true or false)'),
 ];
 
 export const validateSlug = param('slug')

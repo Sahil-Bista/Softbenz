@@ -25,6 +25,10 @@ const BlogSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    allowDownload: {
+      type: Boolean,
+      required: true,
+    },
   },
   {
     timestamps: true,

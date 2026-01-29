@@ -10,6 +10,8 @@ import {
   getAllBlogs,
   getBlog,
   postBlog,
+  downloadBlogPDF,
+  toggleDownloadability,
 } from '../../controller/blogController.js';
 import { validationMiddleware } from '../../middlewares/validationMiddleware.js';
 import { asyncWrapper } from '../../utils/asyncWrapper.js';
@@ -92,4 +94,22 @@ BlogRouter.delete(
   validateSlug,
   validationMiddleware,
   asyncWrapper(deleteBlog),
+);
+
+BlogRouter.post(
+  '/toggleDowloadability/:slug',
+  verifyJWT,
+  verifyRoles('Author'),
+  validateSlug,
+  validationMiddleware,
+  asyncWrapper(toggleDownloadability),
+);
+
+BlogRouter.get(
+  '/download/:slug',
+  verifyJWT,
+  verifyRoles('Author', 'User'),
+  validateSlug,
+  validationMiddleware,
+  downloadBlogPDF,
 );
