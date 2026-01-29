@@ -1,5 +1,6 @@
 import app from './app.js';
 import { dbConn } from './config/dbConn.js';
+import mongoose from 'mongoose';
 
 let server;
 
